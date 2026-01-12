@@ -1,0 +1,46 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qwen3-06b
+  namespace: llm-d
+  annotations:
+    otterscale.com/model.name: RedHatAI/Qwen3-0.6B-FP8-dynamic
+  labels:
+    otterscale.com/type: model-artifact
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: cephfs
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: qwen3-06b
+  namespace: llm-d
+  annotations:
+    otterscale.com/model.name: RedHatAI/Qwen3-0.6B-FP8-dynamic
+  labels:
+    otterscale.com/type: model-artifact
+spec:
+  template:
+    spec:
+      containers:
+      - name: model-importer
+        image: ghcr.io/terrywu510/model:qwen3-06b
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          mkdir -p /model-cache/model &&
+          cp -r /model/* /model-cache/model
+        volumeMounts:
+        - name: model-storage
+          mountPath: /model-cache
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: qwen3-06b
+      restartPolicy: Never

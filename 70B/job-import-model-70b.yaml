@@ -1,0 +1,46 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lllama-3-3-70b
+  namespace: llm-d
+  annotations:
+    otterscale.com/model.name: RedHatAI/Llama-3.3-70B-Instruct-FP8-dynamic
+  labels:
+    otterscale.com/type: model-artifact
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: ceph-ext4
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: model-import-job
+  namespace: llm-d
+  annotations:
+    otterscale.com/model.name: RedHatAI/Llama-3.3-70B-Instruct-FP8-dynamic
+  labels:
+    otterscale.com/type: model-artifact
+spec:
+  template:
+    spec:
+      containers:
+      - name: model-importer
+        image: ghcr.io/terrywu510/model:llama3-3-70b
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          mkdir -p /model-cache/model &&
+          cp -r /model/* /model-cache/model
+        volumeMounts:
+        - name: model-storage
+          mountPath: /model-cache
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: llama-3-3-70b
+      restartPolicy: Never
