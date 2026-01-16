@@ -1,0 +1,38 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ollama-3-3-70b
+  namespace: ollama
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: ceph-ext4
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: model-import-job
+  namespace: ollama
+spec:
+  template:
+    spec:
+      containers:
+      - name: model-importer
+        image: ghcr.io/terrywu510/model:ollama-llama3-3-70b
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          mkdir -p /model-cache/model &&
+          cp -r /model/* /model-cache/model
+        volumeMounts:
+        - name: model-storage
+          mountPath: /model-cache
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: ollama-3-3-70b
+      restartPolicy: Never
