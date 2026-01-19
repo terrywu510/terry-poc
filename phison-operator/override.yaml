@@ -1,0 +1,113 @@
+image:
+  repository: docker.io/library/aidaptiv
+  tag: vNXUN_3_03_AA
+  pullPolicy: IfNotPresent
+ 
+imagePullSecrets: []
+ 
+schedulerName: "hami-scheduler"
+ 
+# Deployment configuration
+deployment:
+  name: vllm-api
+  replicas: 1
+ 
+# vLLM server configuration
+vllm:
+  # Environment variables
+  env:
+    vllmUseV1: "1"
+    vllmWorkerMultiprocMethod: "spawn"
+    tiktokenEncodingsBase: ""
+  # Command line arguments
+  args:
+    model: /mnt/data/model/Meta-Llama-3.1-8B-Instruct/
+    nvmePath: /mnt/nvme0
+    port: 8000
+    gpuMemoryUtilization: 0.9
+    maxModelLen: 8192
+    tensorParallelSize: 1
+    dramKvOffloadGb: 0
+    ssdKvOffloadGb: 500
+    noResumeKvCache: true
+    disableGpuReuse: false
+    enableChunkedPrefill: true
+    # Optional flags (commented out by default)
+    # disableLongToken: true
+    # resumeKvCache: true
+    # cleanObsoleteKvCache: true
+    # enablePrefixCaching: true
+    # enforceEager: true
+  # LoRA configuration (all three parameters must be set together)
+  lora:
+    enable: false  # Set to true to enable LoRA
+    modules: ""  # Example: "lora=/app/llama3.1-8B-lora/" (required if enable is true)
+    maxRank: 32  # Maximum LoRA rank (required if enable is true)
+ 
+# Service configuration
+service:
+  type: NodePort
+  port: 8000
+  targetPort: 8000
+  # Optional: uncomment to set a specific nodePort
+  # nodePort: 30299
+ 
+# Security context
+securityContext:
+  privileged: true
+ 
+# Volume configuration
+volumes:
+  dshm:
+    enabled: true
+    sizeLimit: 30Gi
+ 
+# Pre-execution script (runs before main command)
+prescript: |
+  apt install -y nfs-common
+  echo "Starting NFS mount process..."
+  mkdir -p /mnt/data
+  TIMEOUT=300
+  ELAPSED=0
+  while [ $ELAPSED -lt $TIMEOUT ]; do
+    echo "Attempting to mount NFS: to /mnt/data"
+    mount -t nfs4 -o nfsvers=4.1 -v 10.102.197.0:/volumes/_nogroup/andy-nfs/4d9b00c3-68f5-4f84-bbec-bc6c31ef0f70 /mnt/data
+    if mountpoint -q /mnt/data; then
+      echo "NFS mount successful!"
+      break
+    else
+      echo "Mount failed, retrying in 5 seconds... (${ELAPSED}s/${TIMEOUT}s)"
+      sleep 5
+      ELAPSED=$((ELAPSED + 5))
+    fi
+  done
+  if [ $ELAPSED -ge $TIMEOUT ]; then
+    echo "NFS mount timeout after ${TIMEOUT} seconds. Exiting..."
+    exit 1
+  fi
+ 
+# Post-execution script (runs after main command)
+#postscript: |
+#  echo "Server stopped"
+ 
+# Resource requests and limits
+resources:
+  requests:
+    otterscale.com/vgpu: 1
+    #otterscale.com/vgpumem: 30720
+    otterscale.com/vgpumem-percentage: 50
+    phison.com/ai100: 1
+  limits:
+    otterscale.com/vgpu: 1
+    #otterscale.com/vgpumem: 30720
+    otterscale.com/vgpumem-percentage: 50
+    phison.com/ai100: 1
+ 
+# Node selector for GPU nodes
+nodeSelector: {}
+ 
+# Tolerations for GPU taints
+tolerations: []
+ 
+# Affinity rules
+affinity: {}
