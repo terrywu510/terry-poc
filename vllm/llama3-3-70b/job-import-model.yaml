@@ -19,7 +19,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: model-import-job-llama-70b
+  name: llama-3-3-70b
   namespace: llm-d
   annotations:
     otterscale.com/model.name: RedHatAI/Llama-3.3-70B-Instruct-FP8-dynamic

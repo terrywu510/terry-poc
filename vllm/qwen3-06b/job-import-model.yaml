@@ -19,7 +19,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: model-import-job-qwen3-06b
+  name: qwen3-06b
   namespace: llm-d
   annotations:
     otterscale.com/model.name: RedHatAI/Qwen3-0.6B-FP8-dynamic
