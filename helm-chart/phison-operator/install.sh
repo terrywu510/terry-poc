@@ -5,3 +5,6 @@ sudo ctr --namespace k8s.io image pull ghcr.io/terrywu510/aidaptivcache-operator
 sudo ctr --namespace k8s.io image pull ghcr.io/terrywu510/aidaptivcache-node-discover:v0.1.1
 sudo ctr --namespace k8s.io image pull ghcr.io/terrywu510/aidaptivcache-device-plugin:v0.4.6
 sudo ctr --namespace k8s.io image pull ghcr.io/terrywu510/nvme-exporter:1.0.8
+
+## Finetune
+sudo ctr --namespace k8s.io image pull ghcr.io/terrywu510/aidaptiv:vNXUN_3_03_AA
