@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: llama-pod
+  namespace: llm-d
+spec:
+  containers:
+  - name: llama-container
+    image: ubuntu:24.04
+    command: ["sleep", "infinity"]
+    volumeMounts:
+    - name: pvc-volume
+      mountPath: /mnt/llama-pvc
+    - name: host-volume
+      mountPath: /mnt/llama-host
+  volumes:
+  - name: pvc-volume
+    persistentVolumeClaim:
+      claimName: llama-3-3-70b
+  - name: host-volume
+    hostPath:
+      path: /mnt/llama-3-3-70b
